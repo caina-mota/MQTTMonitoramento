@@ -8,13 +8,14 @@ TOPIC = "/teste"
  
 # função chamada quando a conexão for realizada, sendo
 # então realizada a subscrição
-def on_connect(client, data, rc):
+def on_connect(client, data, rc,properties=None):
     client.subscribe([(TOPIC,0)])
  
 # função chamada quando uma nova mensagem do tópico é gerada
 def on_message(client, userdata, msg):
     # decodificando o valor recebido
-    v = msg.payload
+    # v = unpack(">H",msg.payload)[0]
+    v = msg.payload.decode("utf-8")
     print(v)
  
 # clia um cliente para supervisã0
