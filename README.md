@@ -114,5 +114,3 @@ publicação das mensagens para o servidor, para quem consome a informação
  - permacer em loop, para receber mensagens como um servidor
  
     `client.loop_forever()`
-
-
