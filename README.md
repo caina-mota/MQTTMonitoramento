@@ -66,6 +66,11 @@ publicação das mensagens para o servidor, para quem consome a informação
 
 
 ## publicação pelo paho, cliente que publica / sensor
+Exemplos em: 
+      - `https://www.embarcados.com.br/mqtt-protocolos-para-iot/`
+
+      - `https://www.embarcados.com.br/raspberry-pi-3-na-iot-mqtt-e-python/`
+
 
  - cria um identificador baseado no id do sensor (client_id é o identificador)
  
@@ -114,3 +119,10 @@ publicação das mensagens para o servidor, para quem consome a informação
  - permacer em loop, para receber mensagens como um servidor
  
     `client.loop_forever()`
+
+   try:
+      programa
+   
+   except KeyboardInterrupt:
+        print "\nCtrl+C pressionado, encerrando aplicacao e saindo..."
+        sys.exit(0)
