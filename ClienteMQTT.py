@@ -24,6 +24,7 @@ while True:
     t = randint(0,50)
     # codificando o payload como big endian, 2 bytes
     payload = f"{t}"
+    print(payload)
     # envia a publicação
     client.publish(tt,payload,qos=0)
     
