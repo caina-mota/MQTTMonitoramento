@@ -30,5 +30,6 @@ while True:
     # envia a publicação
     client.publish(V,payload,qos=0)
     client.publish(I, payload2,qos=0)
+    print(f"{V} : payload\t {I} : payload2")
     
     sleep(0.1)
