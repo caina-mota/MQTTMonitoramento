@@ -4,6 +4,14 @@ import numpy as np
 from PyQt5 import QtGui, QtCore
 import sys
 import pyqtgraph as pg
+import datetime
+
+from pyqtgraph.graphicsItems.AxisItem import AxisItem
+
+class TimeAxisItem(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        return [datetime.datetime.fromtimestamp(value).time() for value in values]
+        # return [datetime.datetime.strftime(value,"%H:%M:%S") for value in values]
 
 def convolutional_mean_average(signal, w):
     #Criação da máscara
@@ -28,13 +36,16 @@ mw.setCentralWidget(cw)
 l = QtGui.QGridLayout()
 cw.setLayout(l)
 
+date_axis = TimeAxisItem(orientation='bottom')
+date_axis2 = TimeAxisItem(orientation='bottom')
+date_axis3 = TimeAxisItem(orientation='bottom')
 
-pw = pg.PlotWidget(title = "Potência", name='Plot1')  ## giving the plots names allows us to link their axes together
+pw = pg.PlotWidget(title = "Potência", name='Plot1', axisItems = {'bottom' : date_axis})  ## giving the plots names allows us to link their axes together
 l.addWidget(pw, 0,1,3,2)
-pw2 = pg.PlotWidget(title = "Tensão", name='Plot2')
-l.addWidget(pw2,3,1,1,1)
-pw3 = pg.PlotWidget(title = "Corrente")
-l.addWidget(pw3,3,2,1,1)
+pw2 = pg.PlotWidget(title = "Tensão", name='Plot2', axisItems = {'bottom' : date_axis2})
+l.addWidget(pw2,3,1,2,1)
+pw3 = pg.PlotWidget(title = "Corrente", axisItems = {'bottom' : date_axis3})
+l.addWidget(pw3,3,2,2,1)
 
 
 textedit = QtGui.QLineEdit()
@@ -53,21 +64,26 @@ l.addWidget(pkv,4,0)
 
 mw.show()
 
-p1 = pw.plot()
-p4 = pw.plot()
+pw.addLegend()
+pw2.addLegend()
+pw3.addLegend()
+
+p1 = pw.plot(name="Potência Atual")
+p4 = pw.plot(name="Média Móvel Potência")
 # p1.setPen('w')
 pw.setLabel('left', 'Potência', units='W')
 pw.setLabel('bottom', 'Time', units='s')
-pw.enableAutoRange(True, True)
+pw.enableAutoRange(x = True, y = True)
+pw.setAutoVisible(x=False, y=True)
 
 
-p2 = pw2.plot()
+p2 = pw2.plot(name="Tensão RMS")
 # p2.setPen((200,200,100))
 pw2.setLabel('left', 'Tensão RMS', units='V')
 pw2.setLabel('bottom', 'Time', units='s')
 pw2.enableAutoRange(True, True)
 
-p3 = pw3.plot()
+p3 = pw3.plot(name="Corrente")
 # p3.setPen((200,200,100))
 pw3.setLabel('left', 'Corrente', units='A')
 pw3.setLabel('bottom', 'Time', units='s')
@@ -143,8 +159,6 @@ def packetview(msg1, msg2):
     m1 = np.float(msg1.payload.decode("utf-8"))
     m2 = np.float(msg2.payload.decode("utf-8"))
     topicslist.append(f"'{msg1.topic}' : {m1} \t '{msg2.topic}' : {m2} ")
-    
-
 
         
         
@@ -155,12 +169,15 @@ pkv.clicked.connect(packetviewbt)
 msg1 = None
 msg2 = None
 
+time_now = []
+
 def update_data(msg):
     global v, i, att
     global P, V, I, Pmm, index
     global p1, p2, p3, p4
     global pw, pw2, pw3
     global pkv, msg1, msg2
+    global time_now
     # Verificar qual o sensor que está sendo lido
     if msg.topic[-1] == "1":
         v = np.float(msg.payload.decode("utf-8"))
@@ -179,6 +196,7 @@ def update_data(msg):
             att = 0
     
     if att == 1:
+        time_now.append(datetime.datetime.now())
         if len(index) >0:
             index.append(index[-1]+1) 
         else:
@@ -189,21 +207,22 @@ def update_data(msg):
         P.append(v * i)
         
         t = np.array(index) * 0.15
-        p1.setData(x=t, y=P, pen = ('r'))
-        p2.setData(x=t, y=V, pen = ('g'))
-        p3.setData(x=t, y=I, pen = "b")
+        time_t = [x.timestamp() for x in time_now]
+        p1.setData(x= time_t, y=P, pen = ('r'))
+        p2.setData(x=time_t, y=V, pen = ('g'))
+        # p2.setData(x=[x.timestamp() for x in time_now], y=V, pen = ('g'))
+        p3.setData(x=time_t, y=I, pen = "b")
         
         w = 30
         if len(P) > w:
             Pmm = convolutional_mean_average(P, w)
-            p4.setData(x=t, y=Pmm, pen = ('y'))
+            p4.setData(x=time_t, y=Pmm, pen = ('y'))
 
         if index[-1] >61:
-            pw.setXRange(t[-60], t[-1], padding = 1)
-            pw3.setXLink('Plot1')
-            pw2.setXLink('Plot1')
+            pw.setRange(xRange = [time_t[-60], time_t[-1]], padding = 0.05)
+            pw2.setRange(xRange = [time_t[-60], time_t[-1]], padding = 0.05)
+            pw3.setRange(xRange = [time_t[-60], time_t[-1]], padding = 0.05)
             
-
         calcula_medias()
         update_consumo()
 

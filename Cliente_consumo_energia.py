@@ -21,7 +21,7 @@ client.connect("192.168.100.117", 1883)
 while True:
     # gera um valor de tensão e corrente aleatórios
     v = round(uniform(216,224),3)
-    i = round(uniform(1,5),3)
+    i = round(uniform(3,5),3)
 
     #monta os pacotes a serem enviados
     payload = f"{v}"
@@ -30,6 +30,6 @@ while True:
     # envia a publicação
     client.publish(V,payload,qos=0)
     client.publish(I, payload2,qos=0)
-    print(f"{V} : payload\t {I} : payload2")
+    print(f"{V} : {payload}\t {I} : {payload2}")
     
     sleep(0.1)
