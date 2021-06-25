@@ -40,11 +40,11 @@ date_axis = TimeAxisItem(orientation='bottom')
 date_axis2 = TimeAxisItem(orientation='bottom')
 date_axis3 = TimeAxisItem(orientation='bottom')
 
-pw = pg.PlotWidget(title = "Potência", name='Plot1', axisItems = {'bottom' : date_axis})  ## giving the plots names allows us to link their axes together
+pw = pg.PlotWidget(title = "Potência Atual em Consumo", name='Plot1', axisItems = {'bottom' : date_axis})  ## giving the plots names allows us to link their axes together
 l.addWidget(pw, 0,1,3,2)
-pw2 = pg.PlotWidget(title = "Tensão", name='Plot2', axisItems = {'bottom' : date_axis2})
+pw2 = pg.PlotWidget(title = "Tensão RMS Atual Lida", name='Plot2', axisItems = {'bottom' : date_axis2})
 l.addWidget(pw2,3,1,2,1)
-pw3 = pg.PlotWidget(title = "Corrente", axisItems = {'bottom' : date_axis3})
+pw3 = pg.PlotWidget(title = "Corrente Atual", axisItems = {'bottom' : date_axis3})
 l.addWidget(pw3,3,2,2,1)
 
 
@@ -58,8 +58,8 @@ textview.setReadOnly(True)
 l.addWidget(textview,2,0)
 topicslist = QtGui.QTextEdit()
 topicslist.setReadOnly(True)
-l.addWidget(topicslist,3,0,2,1)
-pkv = QtGui.QPushButton('HABILITAR VISUALIZAÇÃO DE PACOTES')
+l.addWidget(topicslist,3,0,1,1)
+pkv = QtGui.QPushButton('VISUALIZAÇÃO DE PACOTES')
 l.addWidget(pkv,4,0)
 
 mw.show()
@@ -72,7 +72,7 @@ p1 = pw.plot(name="Potência Atual")
 p4 = pw.plot(name="Média Móvel Potência")
 # p1.setPen('w')
 pw.setLabel('left', 'Potência', units='W')
-pw.setLabel('bottom', 'Time', units='s')
+pw.setLabel('bottom', 'Horário')
 pw.enableAutoRange(x = True, y = True)
 pw.setAutoVisible(x=False, y=True)
 
@@ -80,13 +80,13 @@ pw.setAutoVisible(x=False, y=True)
 p2 = pw2.plot(name="Tensão RMS")
 # p2.setPen((200,200,100))
 pw2.setLabel('left', 'Tensão RMS', units='V')
-pw2.setLabel('bottom', 'Time', units='s')
+pw2.setLabel('bottom', 'Horário')
 pw2.enableAutoRange(True, True)
 
 p3 = pw3.plot(name="Corrente")
 # p3.setPen((200,200,100))
 pw3.setLabel('left', 'Corrente', units='A')
-pw3.setLabel('bottom', 'Time', units='s')
+pw3.setLabel('bottom', 'Horário')
 pw3.enableAutoRange(True, True)
 
 tarifa = 0.727870
@@ -116,7 +116,8 @@ def enterFun():
 
 def update_consumo():
     textview.clear()
-    textview.setText(f'\t-- Consumo médio atual --\n \
+    day = datetime.datetime.strftime(datetime.datetime.now(), "%d/%m/%Y")
+    textview.setText(f'\t-- Consumo médio atual {day} --\n \
                         \nPotência média: \t\t {pmed} W\
                         \nTensão Média: \t\t {vmed} Vac\
                         \nCorrente Média: \t {imed} A\
@@ -141,9 +142,10 @@ def calcula_medias():
             cmed = cmed/1000
             gmed = (cmed * tarifa)
     else:
-        pmed = np.mean(P[: index[-1]]).round(3)
-        vmed = np.mean(V[: index[-1]]).round(3)
-        imed = np.mean(I[: index[-1]]).round(3)
+        if len(index) >2:
+            pmed = np.mean(P[: index[-1]]).round(3)
+            vmed = np.mean(V[: index[-1]]).round(3)
+            imed = np.mean(I[: index[-1]]).round(3)
     
     
 pkvon = 0
@@ -206,7 +208,7 @@ def update_data(msg):
         I.append(i)
         P.append(v * i)
         
-        t = np.array(index) * 0.15
+        # t = np.array(index) * 0.15
         time_t = [x.timestamp() for x in time_now]
         p1.setData(x= time_t, y=P, pen = ('r'))
         p2.setData(x=time_t, y=V, pen = ('g'))
